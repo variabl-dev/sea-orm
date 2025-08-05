@@ -773,7 +773,7 @@ macro_rules! try_getable_uuid {
                     }),
                     #[cfg(feature = "proxy")]
                     #[allow(unused_variables)]
-                    QueryResultRow::Proxy(row) => row.try_get::<uuid::Uuid, _>(idx).map_err(|e| {
+                    QueryResultRow::Proxy(row) => row.try_get(idx).map_err(|e| {
                         debug_print!("{:#?}", e.to_string());
                         err_null_idx_col(idx)
                     }),
@@ -1028,12 +1028,10 @@ mod postgres_array {
                             })
                         }
                         #[cfg(feature = "proxy")]
-                        QueryResultRow::Proxy(row) => {
-                            row.try_get::<Vec<uuid::Uuid>, _>(idx).map_err(|e| {
-                                debug_print!("{:#?}", e.to_string());
-                                err_null_idx_col(idx)
-                            })
-                        }
+                        QueryResultRow::Proxy(row) => row.try_get(idx).map_err(|e| {
+                            debug_print!("{:#?}", e.to_string());
+                            err_null_idx_col(idx)
+                        }),
                         #[allow(unreachable_patterns)]
                         _ => unreachable!(),
                     };
@@ -1125,7 +1123,7 @@ impl TryGetable for pgvector::Vector {
                 err_null_idx_col(idx)
             }),
             #[cfg(feature = "proxy")]
-            QueryResultRow::Proxy(row) => row.try_get::<pgvector::Vector, _>(idx).map_err(|e| {
+            QueryResultRow::Proxy(row) => row.try_get(idx).map_err(|e| {
                 debug_print!("{:#?}", e.to_string());
                 err_null_idx_col(idx)
             }),
