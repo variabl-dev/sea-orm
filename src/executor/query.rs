@@ -776,6 +776,7 @@ macro_rules! try_getable_uuid {
                     QueryResultRow::Proxy(row) => row
                         .try_get::<Option<uuid::Uuid>, _>(idx)
                         .map_err(|e| {
+                            debug_print!("{:#?}", row);
                             debug_print!("{:#?}", e.to_string());
                             err_null_idx_col(idx)
                         })
@@ -1026,6 +1027,7 @@ mod postgres_array {
                         #[cfg(feature = "mock")]
                         QueryResultRow::Mock(row) => {
                             row.try_get::<Vec<uuid::Uuid>, _>(idx).map_err(|e| {
+                                debug_print!("{:#?}", row);
                                 debug_print!("{:#?}", e.to_string());
                                 err_null_idx_col(idx)
                             })
