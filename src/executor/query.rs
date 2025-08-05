@@ -773,14 +773,13 @@ macro_rules! try_getable_uuid {
                     }),
                     #[cfg(feature = "proxy")]
                     #[allow(unused_variables)]
-                    QueryResultRow::Proxy(row) => row
-                        .try_get::<Option<uuid::Uuid>, _>(idx)
-                        .map_err(|e| {
-                            debug_print!("{:#?}", row);
+                    QueryResultRow::Proxy(row) => {
+                        let uuid_str = row.try_get::<String, _>(idx).map_err(|e| {
                             debug_print!("{:#?}", e.to_string());
                             err_null_idx_col(idx)
-                        })
-                        .and_then(|opt| opt.ok_or_else(|| err_null_idx_col(idx))),
+                        })?;
+                        uuid::Uuid::parse_str(&uuid_str).map_err(|_| err_null_idx_col(idx))
+                    }
                     #[allow(unreachable_patterns)]
                     _ => unreachable!(),
                 };
@@ -1027,19 +1026,24 @@ mod postgres_array {
                         #[cfg(feature = "mock")]
                         QueryResultRow::Mock(row) => {
                             row.try_get::<Vec<uuid::Uuid>, _>(idx).map_err(|e| {
-                                debug_print!("{:#?}", row);
                                 debug_print!("{:#?}", e.to_string());
                                 err_null_idx_col(idx)
                             })
                         }
                         #[cfg(feature = "proxy")]
-                        QueryResultRow::Proxy(row) => row
-                            .try_get::<Option<Vec<uuid::Uuid>>, _>(idx)
-                            .map_err(|e| {
+                        QueryResultRow::Proxy(row) => {
+                            let uuid_strs = row.try_get::<Vec<String>, _>(idx).map_err(|e| {
                                 debug_print!("{:#?}", e.to_string());
                                 err_null_idx_col(idx)
-                            })
-                            .and_then(|opt| opt.ok_or_else(|| err_null_idx_col(idx))),
+                            })?;
+                            uuid_strs
+                                .iter()
+                                .map(|uuid_str| {
+                                    uuid::Uuid::parse_str(&uuid_str)
+                                        .map_err(|_| err_null_idx_col(idx))
+                                })
+                                .collect()
+                        }
                         #[allow(unreachable_patterns)]
                         _ => unreachable!(),
                     };
