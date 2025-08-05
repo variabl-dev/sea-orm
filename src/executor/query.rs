@@ -773,10 +773,13 @@ macro_rules! try_getable_uuid {
                     }),
                     #[cfg(feature = "proxy")]
                     #[allow(unused_variables)]
-                    QueryResultRow::Proxy(row) => row.try_get(idx).map_err(|e| {
-                        debug_print!("{:#?}", e.to_string());
-                        err_null_idx_col(idx)
-                    }),
+                    QueryResultRow::Proxy(row) => row
+                        .try_get::<Option<uuid::Uuid>, _>(idx)
+                        .map_err(|e| {
+                            debug_print!("{:#?}", e.to_string());
+                            err_null_idx_col(idx)
+                        })
+                        .and_then(|opt| opt.ok_or_else(|| err_null_idx_col(idx))),
                     #[allow(unreachable_patterns)]
                     _ => unreachable!(),
                 };
@@ -1028,10 +1031,13 @@ mod postgres_array {
                             })
                         }
                         #[cfg(feature = "proxy")]
-                        QueryResultRow::Proxy(row) => row.try_get(idx).map_err(|e| {
-                            debug_print!("{:#?}", e.to_string());
-                            err_null_idx_col(idx)
-                        }),
+                        QueryResultRow::Proxy(row) => row
+                            .try_get::<Option<Vec<uuid::Uuid>>, _>(idx)
+                            .map_err(|e| {
+                                debug_print!("{:#?}", e.to_string());
+                                err_null_idx_col(idx)
+                            })
+                            .and_then(|opt| opt.ok_or_else(|| err_null_idx_col(idx))),
                         #[allow(unreachable_patterns)]
                         _ => unreachable!(),
                     };
@@ -1123,10 +1129,13 @@ impl TryGetable for pgvector::Vector {
                 err_null_idx_col(idx)
             }),
             #[cfg(feature = "proxy")]
-            QueryResultRow::Proxy(row) => row.try_get(idx).map_err(|e| {
-                debug_print!("{:#?}", e.to_string());
-                err_null_idx_col(idx)
-            }),
+            QueryResultRow::Proxy(row) => row
+                .try_get::<Option<pgvector::Vector>, _>(idx)
+                .map_err(|e| {
+                    debug_print!("{:#?}", e.to_string());
+                    err_null_idx_col(idx)
+                })
+                .and_then(|opt| opt.ok_or_else(|| err_null_idx_col(idx))),
             #[allow(unreachable_patterns)]
             _ => unreachable!(),
         }
